@@ -61,6 +61,88 @@ def save_config(config):
         print(f"Failed to save config: {e}")
         return False
 
+def select_windows():
+    """Let user select which MapleRoyals windows to auto-click."""
+    if not WINDOW_AUTOMATION_AVAILABLE:
+        return None
+
+    try:
+        # Find all windows with 'MapleRoyals' in title
+        all_windows = [w for w in gw.getAllWindows() if 'MapleRoyals' in w.title]
+
+        if not all_windows:
+            print("  No MapleRoyals windows currently running.")
+            print("  Will auto-click all MapleRoyals windows when available.")
+            return None
+
+        # Filter valid windows
+        valid_windows = []
+        seen_handles = set()
+
+        for w in all_windows:
+            try:
+                if w._hWnd not in seen_handles:
+                    _ = w.size
+                    _ = w.title
+                    valid_windows.append(w)
+                    seen_handles.add(w._hWnd)
+            except:
+                continue
+
+        if not valid_windows:
+            print("  No valid MapleRoyals windows found.")
+            print("  Will auto-click all MapleRoyals windows when available.")
+            return None
+
+        print(f"\n  Found {len(valid_windows)} MapleRoyals window(s):")
+        for i, w in enumerate(valid_windows, 1):
+            print(f"    [{i}] {w.title}")
+
+        print("\n  Select windows to auto-click:")
+        print("    Type '/all' for all windows")
+        print("    Or enter numbers separated by commas (e.g., '1,3' or '2')")
+        print("    Press Enter to cancel: ", end='', flush=True)
+
+        selection = input().strip().lower()
+
+        if not selection:
+            print("  Selection cancelled. Auto-click will be disabled.")
+            return False
+
+        if selection == '/all':
+            print(f"  Selected: All {len(valid_windows)} windows")
+            return None  # None means "all windows"
+
+        # Parse selection
+        try:
+            indices = [int(x.strip()) for x in selection.split(',')]
+            selected_titles = []
+
+            for idx in indices:
+                if 1 <= idx <= len(valid_windows):
+                    selected_titles.append(valid_windows[idx - 1].title)
+                else:
+                    print(f"  Warning: Invalid index {idx}, skipping")
+
+            if not selected_titles:
+                print("  No valid windows selected. Auto-click will be disabled.")
+                return False
+
+            print(f"  Selected {len(selected_titles)} window(s):")
+            for title in selected_titles:
+                print(f"    - {title}")
+
+            return selected_titles
+
+        except ValueError:
+            print("  Invalid input. Auto-click will be disabled.")
+            return False
+
+    except Exception as e:
+        print(f"  Error during window selection: {e}")
+        print("  Will auto-click all MapleRoyals windows.")
+        return None
+
 def setup_config():
     """Interactive setup for configuration."""
     print("\n=== Key Configuration ===")
@@ -111,11 +193,20 @@ def setup_config():
 
     # Ask about auto-click feature
     auto_click = False
+    selected_windows = None
+
     if WINDOW_AUTOMATION_AVAILABLE:
         print("\nAuto-click MapleRoyals windows when timer ends?")
         print("  Type '/enable' to enable, or press Enter to disable: ", end='', flush=True)
         auto_click_input = input().strip().lower()
         auto_click = (auto_click_input == '/enable')
+
+        if auto_click:
+            selected_windows = select_windows()
+            # If user cancelled selection, disable auto-click
+            if selected_windows is False:
+                auto_click = False
+                selected_windows = None
     else:
         print("\nNote: Auto-click feature unavailable (missing dependencies)")
 
@@ -123,12 +214,14 @@ def setup_config():
         'trigger_key': trigger_key_name,
         'stop_key': stop_key_name,
         'countdown_seconds': countdown_seconds,
-        'auto_click_windows': auto_click
+        'auto_click_windows': auto_click,
+        'selected_window_titles': selected_windows
     }
 
 def click_maple_windows():
     """
-    Find and click all MapleRoyals windows with human-like timing.
+    Find and click MapleRoyals windows with human-like timing.
+    Respects user's window selection from config.
     """
     if not WINDOW_AUTOMATION_AVAILABLE:
         print("Window automation not available")
@@ -148,24 +241,41 @@ def click_maple_windows():
 
         for w in all_windows:
             try:
-                # Check if window is valid and visible
-                if w.isActive is not None and w._hWnd not in seen_handles:
+                # Check if window is valid and accessible
+                if w._hWnd not in seen_handles:
                     # Try to get window rect to verify it's accessible
                     _ = w.size
+                    _ = w.title  # Verify we can read title
                     valid_windows.append(w)
                     seen_handles.add(w._hWnd)
-            except Exception:
-                # Skip invalid windows
+            except:
                 continue
 
         if not valid_windows:
             print("No valid MapleRoyals windows found")
             return
 
-        print(f"\nFound {len(valid_windows)} valid MapleRoyals window(s)")
-        print("Starting auto-click sequence...")
+        # Filter by user selection if configured
+        selected_titles = config.get('selected_window_titles')
+        if selected_titles is not None:
+            # User has selected specific windows
+            windows = [w for w in valid_windows if w.title in selected_titles]
 
-        windows = valid_windows
+            if not windows:
+                print(f"None of the selected windows are currently running.")
+                print(f"Selected windows: {', '.join(selected_titles)}")
+                return
+
+            print(f"\nFound {len(windows)} of {len(selected_titles)} selected window(s)")
+            not_found = set(selected_titles) - {w.title for w in windows}
+            if not_found:
+                print(f"Not running: {', '.join(not_found)}")
+        else:
+            # Click all windows
+            windows = valid_windows
+            print(f"\nFound {len(valid_windows)} MapleRoyals window(s)")
+
+        print("Starting auto-click sequence...")
 
         # Shuffle windows to make it more human-like
         random.shuffle(windows)
@@ -351,6 +461,16 @@ def main():
         print(f"  Countdown: {existing_config['countdown_seconds']} seconds")
         auto_click_status = "ENABLED" if existing_config.get('auto_click_windows', False) else "DISABLED"
         print(f"  Auto-click MapleRoyals: {auto_click_status}")
+
+        if existing_config.get('auto_click_windows', False):
+            selected_titles = existing_config.get('selected_window_titles')
+            if selected_titles:
+                print(f"  Selected windows ({len(selected_titles)}):")
+                for title in selected_titles:
+                    print(f"    - {title}")
+            else:
+                print(f"  Mode: Click all windows")
+
         print("\nDo you want to reconfigure? (Type '/setup' or press Enter to skip): ", end='', flush=True)
 
         choice = input().strip().lower()
@@ -378,12 +498,17 @@ def main():
                 'trigger_key': DEFAULT_TRIGGER_KEY,
                 'stop_key': DEFAULT_STOP_KEY,
                 'countdown_seconds': DEFAULT_COUNTDOWN_SECONDS,
-                'auto_click_windows': DEFAULT_AUTO_CLICK_WINDOWS
+                'auto_click_windows': DEFAULT_AUTO_CLICK_WINDOWS,
+                'selected_window_titles': None
             }
 
     # Ensure auto_click_windows exists in config (for backwards compatibility)
     if 'auto_click_windows' not in config:
         config['auto_click_windows'] = DEFAULT_AUTO_CLICK_WINDOWS
+
+    # Ensure selected_window_titles exists in config (for backwards compatibility)
+    if 'selected_window_titles' not in config:
+        config['selected_window_titles'] = None
 
     print(f"\n=== Program started ===")
     print(f"Press [{config['trigger_key']}] to START/RESET")
@@ -391,6 +516,11 @@ def main():
     print(f"Countdown: {config['countdown_seconds']} seconds")
     if config.get('auto_click_windows', False):
         print("Auto-click MapleRoyals: ENABLED")
+        selected_titles = config.get('selected_window_titles')
+        if selected_titles:
+            print(f"  Selected {len(selected_titles)} specific window(s)")
+        else:
+            print(f"  Mode: Click all windows")
     else:
         print("Auto-click MapleRoyals: DISABLED")
     print("Type '/setup' to reconfigure\n")
