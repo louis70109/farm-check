@@ -257,8 +257,12 @@ def click_maple_windows():
 
         # Filter by user selection if configured
         selected_titles = config.get('selected_window_titles')
+        print(f"\nDebug: selected_window_titles from config: {selected_titles}")
+        print(f"Debug: Type of selected_window_titles: {type(selected_titles)}")
+
         if selected_titles is not None:
             # User has selected specific windows
+            print(f"Debug: Filtering {len(valid_windows)} windows by {len(selected_titles)} selected titles")
             windows = [w for w in valid_windows if w.title in selected_titles]
 
             if not windows:
@@ -272,6 +276,7 @@ def click_maple_windows():
                 print(f"Not running: {', '.join(not_found)}")
         else:
             # Click all windows
+            print(f"Debug: No window selection, clicking all windows")
             windows = valid_windows
             print(f"\nFound {len(valid_windows)} MapleRoyals window(s)")
 
@@ -303,13 +308,19 @@ def click_maple_windows():
             try:
                 # Use mouse to activate window (more human-like and bypasses API restrictions)
                 try:
-                    # Get window center position
+                    # Get window position and size
                     window_left, window_top, window_width, window_height = window.left, window.top, window.width, window.height
-                    center_x = window_left + window_width // 2
-                    center_y = window_top + window_height // 2
 
-                    # Click on window center to activate it
-                    pyautogui.click(center_x, center_y)
+                    # Add random offset to click position (±30% from center)
+                    # This makes it look more human-like
+                    offset_x = int(random.uniform(-0.3, 0.3) * window_width)
+                    offset_y = int(random.uniform(-0.3, 0.3) * window_height)
+
+                    click_x = window_left + window_width // 2 + offset_x
+                    click_y = window_top + window_height // 2 + offset_y
+
+                    # Click on random position within window to activate it
+                    pyautogui.click(click_x, click_y)
                     time.sleep(0.2)  # Wait for window to become active
 
                 except Exception:
