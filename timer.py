@@ -136,14 +136,36 @@ def click_maple_windows():
 
     try:
         # Find all windows with 'MapleRoyals' in title
-        windows = [w for w in gw.getAllWindows() if 'MapleRoyals' in w.title]
+        all_windows = [w for w in gw.getAllWindows() if 'MapleRoyals' in w.title]
 
-        if not windows:
+        if not all_windows:
             print("No MapleRoyals windows found")
             return
 
-        print(f"\nFound {len(windows)} MapleRoyals window(s)")
+        # Filter out invalid windows and duplicates
+        valid_windows = []
+        seen_handles = set()
+
+        for w in all_windows:
+            try:
+                # Check if window is valid and visible
+                if w.isActive is not None and w._hWnd not in seen_handles:
+                    # Try to get window rect to verify it's accessible
+                    _ = w.size
+                    valid_windows.append(w)
+                    seen_handles.add(w._hWnd)
+            except Exception:
+                # Skip invalid windows
+                continue
+
+        if not valid_windows:
+            print("No valid MapleRoyals windows found")
+            return
+
+        print(f"\nFound {len(valid_windows)} valid MapleRoyals window(s)")
         print("Starting auto-click sequence...")
+
+        windows = valid_windows
 
         # Shuffle windows to make it more human-like
         random.shuffle(windows)
@@ -169,6 +191,11 @@ def click_maple_windows():
         # Click each window
         for i, window in enumerate(windows):
             try:
+                # Verify window still exists
+                if not window.isActive and not window.isMinimized:
+                    print(f"  [{i+1}/{num_windows}] Skipped: Window no longer exists")
+                    continue
+
                 # Restore window if minimized
                 if window.isMinimized:
                     window.restore()
@@ -188,7 +215,7 @@ def click_maple_windows():
                     time.sleep(delays[i])
 
             except Exception as e:
-                print(f"  Error clicking window '{window.title}': {e}")
+                print(f"  [{i+1}/{num_windows}] Error with '{window.title}': {str(e)[:50]}... (skipped)")
                 continue
 
         print("Auto-click sequence completed")
