@@ -301,19 +301,24 @@ def click_maple_windows():
         # Click each window
         for i, window in enumerate(windows):
             try:
-                # Verify window still exists
-                if not window.isActive and not window.isMinimized:
-                    print(f"  [{i+1}/{num_windows}] Skipped: Window no longer exists")
-                    continue
+                # Use mouse to activate window (more human-like and bypasses API restrictions)
+                try:
+                    # Get window center position
+                    window_left, window_top, window_width, window_height = window.left, window.top, window.width, window.height
+                    center_x = window_left + window_width // 2
+                    center_y = window_top + window_height // 2
 
-                # Restore window if minimized
-                if window.isMinimized:
-                    window.restore()
-                    time.sleep(0.2)  # Wait for window to restore
+                    # Click on window center to activate it
+                    pyautogui.click(center_x, center_y)
+                    time.sleep(0.2)  # Wait for window to become active
 
-                # Activate window
-                window.activate()
-                time.sleep(0.15)  # Small delay to ensure window is focused
+                except Exception:
+                    # If mouse click fails, try API activate as fallback
+                    try:
+                        window.activate()
+                        time.sleep(0.15)
+                    except:
+                        print(f"  [{i+1}/{num_windows}] Warning: Could not activate '{window.title}', sending keypress anyway")
 
                 # Press the trigger key
                 keyboard.press_and_release(config['trigger_key'])
