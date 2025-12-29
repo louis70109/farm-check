@@ -364,28 +364,68 @@ def on_timeout():
         print("\nAuto-click is enabled. Clicking MapleRoyals windows...")
         click_maple_windows()
 
-    print("\nDo you want to adjust the countdown time? (Type time in seconds, or press Enter to skip): ", end='', flush=True)
-    choice = input().strip()
+    # Auto-restart countdown with ESC to cancel
+    print("\n" + "="*50)
+    print("Timer will auto-restart in 5 seconds...")
+    print("Press ESC to configure settings, or wait to auto-restart")
+    print("="*50)
 
-    if choice:
-        try:
+    # Check for ESC key for 5 seconds
+    esc_pressed = False
+    start_wait = time.time()
+    wait_duration = 5.0
+
+    while time.time() - start_wait < wait_duration:
+        remaining = wait_duration - (time.time() - start_wait)
+        print(f"\rAuto-restarting in {remaining:.1f}s... (Press ESC to cancel)", end='', flush=True)
+
+        # Check if ESC is pressed
+        if keyboard.is_pressed('esc'):
+            esc_pressed = True
+            print("\n\nESC pressed! Configuration menu:")
+            break
+
+        time.sleep(0.1)
+
+    if esc_pressed:
+        # User wants to configure
+        print("\n1. Type a number to adjust countdown seconds")
+        print("2. Type '/setup' to reconfigure all settings")
+        print("3. Press Enter to restart timer with current settings")
+        print("\nYour choice: ", end='', flush=True)
+
+        choice = input().strip()
+
+        if choice == '/setup':
+            # Unregister hotkeys before setup
+            unregister_hotkeys()
+            new_config = setup_config()
+            if new_config:
+                config = new_config
+                save_config(config)
+                print("\nConfiguration updated successfully!")
+            else:
+                print("\nSetup cancelled. Keeping current configuration.")
+            # Re-register hotkeys
+            register_hotkeys()
+            print(f"\nPress [{config['trigger_key']}] to start timer")
+
+        elif choice.isdigit():
             new_countdown = int(choice)
             if new_countdown > 0:
                 config['countdown_seconds'] = new_countdown
                 save_config(config)
                 print(f"Countdown updated to {new_countdown} seconds.")
-
-                print("Do you want to start the timer now? (Type '/start' or press Enter to skip): ", end='', flush=True)
-                start_choice = input().strip().lower()
-
-                if start_choice == '/start':
-                    start_timer()
+                start_timer()
             else:
-                print("Invalid time. Keeping current setting.")
-        except ValueError:
-            print("Invalid input. Keeping current setting.")
-
-    print(f"\nPress [{config['trigger_key']}] to restart timer, or [{config['stop_key']}] if running.")
+                print("Invalid time. Press trigger key to restart.")
+        else:
+            # Just restart with current settings
+            start_timer()
+    else:
+        # Auto-restart
+        print("\n\nAuto-restarting timer...")
+        start_timer()
 
 def start_timer():
     global current_timer
