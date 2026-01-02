@@ -19,11 +19,16 @@ except ImportError:
 DEFAULT_TRIGGER_KEY = 'page up'
 DEFAULT_STOP_KEY = 'page down'
 DEFAULT_COUNTDOWN_SECONDS = 130
+DEFAULT_RANDOM_OFFSET_SECONDS = 0
 DEFAULT_AUTO_CLICK_WINDOWS = False
 CONFIG_FILE = 'timer_config.json'
 # -----------------------
 
 current_timer = None
+actual_countdown = 0  # Stores the actual countdown time with random offset applied
+timer_start_time = None  # Timestamp when timer started
+progress_thread = None  # Thread for displaying progress bar
+stop_progress = False  # Flag to stop progress thread
 config = {}
 
 def get_config_path():
@@ -191,6 +196,26 @@ def setup_config():
     else:
         countdown_seconds = DEFAULT_COUNTDOWN_SECONDS
 
+    print(f"\nRandom time offset in seconds (±N seconds to avoid detection)")
+    print(f"  Example: 5 means timer will vary between {countdown_seconds-5}~{countdown_seconds+5} seconds")
+    print(f"  Press Enter for default {DEFAULT_RANDOM_OFFSET_SECONDS}: ", end='', flush=True)
+    offset_input = input().strip()
+
+    if offset_input:
+        try:
+            random_offset = int(offset_input)
+            if random_offset < 0:
+                print("Error: Offset must be non-negative!")
+                return None
+            if random_offset >= countdown_seconds:
+                print(f"Error: Offset must be less than countdown time ({countdown_seconds}s)!")
+                return None
+        except ValueError:
+            print("Error: Invalid number!")
+            return None
+    else:
+        random_offset = DEFAULT_RANDOM_OFFSET_SECONDS
+
     # Ask about auto-click feature
     auto_click = False
     selected_windows = None
@@ -214,6 +239,7 @@ def setup_config():
         'trigger_key': trigger_key_name,
         'stop_key': stop_key_name,
         'countdown_seconds': countdown_seconds,
+        'random_offset_seconds': random_offset,
         'auto_click_windows': auto_click,
         'selected_window_titles': selected_windows
     }
@@ -349,9 +375,36 @@ def click_maple_windows():
     except Exception as e:
         print(f"Error in click_maple_windows: {e}")
 
+def show_progress():
+    """Display progress bar while timer is running."""
+    global stop_progress, timer_start_time, actual_countdown
+
+    while not stop_progress:
+        if timer_start_time is None:
+            time.sleep(0.1)
+            continue
+
+        elapsed = time.time() - timer_start_time
+        remaining = max(0, actual_countdown - elapsed)
+        progress = min(1.0, elapsed / actual_countdown) if actual_countdown > 0 else 1.0
+
+        # Progress bar configuration
+        bar_length = 30
+        filled_length = int(bar_length * progress)
+        bar = '█' * filled_length + '░' * (bar_length - filled_length)
+
+        # Format time
+        mins, secs = divmod(int(remaining), 60)
+        time_str = f"{mins:02d}:{secs:02d}"
+
+        # Display progress bar
+        print(f"\r[{bar}] {progress*100:5.1f}% | {time_str} remaining", end='', flush=True)
+
+        time.sleep(0.5)  # Update twice per second
+
 def play_sound():
     """Play system default sound."""
-    print(f"\nTime's up! Playing sound...")
+    print(f"\n\nTime's up! Playing sound...")
     # MB_ICONEXCLAMATION produces a standard system alert sound
     winsound.MessageBeep(winsound.MB_ICONEXCLAMATION)
 
@@ -428,19 +481,46 @@ def on_timeout():
         start_timer()
 
 def start_timer():
-    global current_timer
+    global current_timer, actual_countdown, timer_start_time, progress_thread, stop_progress
     if current_timer is not None:
         current_timer.cancel()
 
-    print(f"\n[RESET] Timer started: {config['countdown_seconds']} seconds...")
-    current_timer = threading.Timer(config['countdown_seconds'], on_timeout)
+    # Stop existing progress thread if any
+    if progress_thread is not None:
+        stop_progress = True
+        progress_thread.join(timeout=1.0)
+
+    # Calculate actual countdown with random offset
+    base_time = config['countdown_seconds']
+    offset = config.get('random_offset_seconds', 0)
+
+    if offset > 0:
+        # Random offset between -offset and +offset
+        random_offset = random.randint(-offset, offset)
+        actual_countdown = base_time + random_offset
+        print(f"\n[RESET] Timer started: {actual_countdown}s (base: {base_time}s, offset: {random_offset:+d}s)")
+    else:
+        actual_countdown = base_time
+        print(f"\n[RESET] Timer started: {actual_countdown} seconds...")
+
+    # Start timer and progress bar
+    timer_start_time = time.time()
+    stop_progress = False
+    progress_thread = threading.Thread(target=show_progress, daemon=True)
+    progress_thread.start()
+
+    current_timer = threading.Timer(actual_countdown, on_timeout)
     current_timer.start()
 
 def stop_timer():
-    global current_timer
+    global current_timer, stop_progress, timer_start_time
     if current_timer is not None:
         current_timer.cancel()
         current_timer = None
+
+    # Stop progress bar
+    stop_progress = True
+    timer_start_time = None
 
     print("\n[STOP] Timer cancelled.")
 
