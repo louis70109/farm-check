@@ -2,3 +2,5 @@ keyboard==0.13.5
 pyinstaller==6.11.1
 pygetwindow==0.0.9
 pyautogui==0.9.54
+pytest>=7.0.0
+pytest-cov>=4.0.0
