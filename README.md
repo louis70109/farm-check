@@ -78,84 +78,96 @@
 
 ### CI/CD 流程
 
-專案已配置 GitHub Actions 進行自動化測試和建構：
+專案已配置 GitHub Actions 進行自動化建構和發布：
 
-1. **自動測試**：每次推送 tag 時，會先執行完整測試套件
-2. **測試必須通過**：只有當所有測試通過後，才會進行建構
-3. **自動建構**：測試通過後，自動打包 Windows 執行檔
-4. **自動發布**：建構完成後，自動創建 GitHub Release
+1. **自動觸發**：當你推送版本標籤（如 `v1.0.1`）時自動啟動
+2. **自動建構**：在 Windows 環境下使用 PyInstaller 打包成單一執行檔
+3. **自動發布**：建構完成後，自動創建 GitHub Release 並附上執行檔
 
-### 步驟
+### 完整步驟
 
-1. **將專案推到 GitHub**
-   ```bash
-   git init
-   git add .
-   git commit -m "Initial commit"
-   git branch -M main
-   git remote add origin https://github.com/你的使用者名稱/你的專案名稱.git
-   git push -u origin main
-   ```
-
-2. **建立 GitHub Actions 設定檔**
-
-   已經包含在專案中的 `.github/workflows/build.yml` 會在你推送 tag 時自動執行：
-   - **Test Job**: 運行所有測試（51個測試案例）
-   - **Build Job**: 測試通過後才執行建構
-
-3. **觸發自動打包**
-   ```bash
-   # 確保本地測試通過
-   python validate_tests.py
-   
-   # 創建版本標籤
-   git tag v1.0.1
-   git push origin v1.0.1
-   ```
-
-4. **查看建構進度**
-   - 到 GitHub 專案頁面
-   - 點選 "Actions" 標籤
-   - 查看測試和建構狀態
-
-5. **下載執行檔**
-
-   - 到 GitHub 專案頁面
-   - 點選右側的 "Releases"
-   - 下載 `timer.exe`
-
-### 本地測試
-
-在推送到 GitHub 前，建議先在本地運行測試：
+#### 1. 將專案推到 GitHub
 
 ```bash
-# 安裝測試依賴
-pip install pytest pytest-cov
-
-# 運行測試
-python validate_tests.py
-
-# 或使用 pytest 直接運行
-pytest tests/ -v --cov=timer --cov-report=html
-
-# 查看覆蓋率報告
-open htmlcov/index.html  # macOS
-start htmlcov/index.html # Windows
+git init
+git add .
+git commit -m "Initial commit"
+git branch -M main
+git remote add origin https://github.com/你的使用者名稱/你的專案名稱.git
+git push -u origin main
 ```
 
-### Pre-commit Hook（可選）
+#### 2. 確認 GitHub Actions 設定
 
-安裝 pre-commit hook 以在提交前自動運行測試：
+專案已包含 `.github/workflows/build.yml`，這個檔案定義了自動化流程：
+- **觸發條件**：推送 `v*` 格式的標籤
+- **執行環境**：Windows-latest + Python 3.11
+- **建構指令**：`pyinstaller --onefile --console timer.py`
+- **輸出結果**：`timer.exe` 執行檔
+
+#### 3. 觸發自動打包
 
 ```bash
-# 安裝 pre-commit
-pip install pre-commit
+# 在本地測試通過後，創建版本標籤
+git tag v1.0.1
 
-# 設置 hook
-pre-commit install
-
-# 現在每次 git commit 都會自動運行測試
+# 推送標籤到 GitHub（這會觸發 Actions）
+git push origin v1.0.1
 ```
+
+**版本號規則（Semantic Versioning）**：
+- `v1.0.0` - 主要版本（有破壞性變更）
+- `v1.1.0` - 次要版本（新功能）
+- `v1.0.1` - 修補版本（錯誤修復）
+
+#### 4. 監控建構進度
+
+1. 前往 GitHub 專案頁面
+2. 點選 "Actions" 標籤
+3. 找到你的 workflow 執行記錄
+4. 查看建構日誌和狀態
+
+**預期執行時間**：約 2-3 分鐘
+
+#### 5. 下載執行檔
+
+建構成功後：
+1. 前往 GitHub 專案頁面
+2. 點選右側的 "Releases"
+3. 找到對應版本（如 `v1.0.1`）
+4. 下載 `timer.exe`
+
+或者在 Actions 頁面直接下載 Artifact（臨時檔案）。
+
+### 手動觸發建構
+
+除了推送標籤，也可以手動觸發：
+
+1. 前往 GitHub 專案的 "Actions" 頁面
+2. 選擇 "Build Windows EXE" workflow
+3. 點擊 "Run workflow" 按鈕
+4. 選擇分支後執行
+
+### 故障排除
+
+**建構失敗怎麼辦？**
+
+1. 查看 Actions 日誌中的錯誤訊息
+2. 檢查 `requirements.txt` 是否包含所有依賴
+3. 確認程式碼在 Windows 上可以正常執行
+4. 在本地測試 PyInstaller 打包：
+   ```bash
+   pyinstaller --onefile --console timer.py
+   ```
+
+**Workflow 沒有觸發？**
+
+1. 確認標籤格式正確（必須是 `v*`）：
+   ```bash
+   git tag -l  # 列出所有標籤
+   ```
+2. 檢查 GitHub Actions 是否啟用（Settings → Actions）
+3. 驗證 `.github/workflows/build.yml` 語法是否正確
 
 ## 重新設定
 

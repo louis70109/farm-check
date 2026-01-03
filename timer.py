@@ -3,9 +3,16 @@ import threading
 import time
 import os
 import sys
-import winsound
 import json
 import random
+
+# Windows-specific module (only available on Windows)
+try:
+    import winsound
+    WINSOUND_AVAILABLE = True
+except ImportError:
+    WINSOUND_AVAILABLE = False
+    print("Warning: winsound not available (non-Windows system). Sound alerts disabled.")
 
 try:
     import pygetwindow as gw
@@ -413,8 +420,12 @@ def show_progress():
 def play_sound():
     """Play system default sound."""
     print(f"\n\nTime's up! Playing sound...")
-    # MB_ICONEXCLAMATION produces a standard system alert sound
-    winsound.MessageBeep(winsound.MB_ICONEXCLAMATION)
+    if WINSOUND_AVAILABLE:
+        # MB_ICONEXCLAMATION produces a standard system alert sound
+        winsound.MessageBeep(winsound.MB_ICONEXCLAMATION)
+    else:
+        # Fallback for non-Windows systems (just print, tests will mock this)
+        print("\a")  # Terminal bell
 
 def on_timeout():
     global config

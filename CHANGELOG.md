@@ -13,26 +13,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Random movement duration (0.3-0.8 seconds) simulates natural mouse speed
   - Added reaction time pause (0.05-0.15 seconds) after movement before clicking
   - Improved anti-detection capabilities
-- **CI/CD Pipeline with mandatory testing**
-  - GitHub Actions workflow now runs full test suite before building
-  - Build only proceeds if all tests pass
-  - Automated test coverage reporting
-  - Pre-commit hooks for local development (optional)
+- **CI/CD Pipeline**
+  - GitHub Actions workflow for automated building on tag push
+  - Automatic GitHub Release creation with executable
 
 ### Changed
 - Updated auto-click sequence to use `pyautogui.moveTo()` with duration parameter
 - Extended total auto-click time to ~5-8 seconds to accommodate mouse animations
-- Updated test suite to verify mouse movement animation behavior (52 tests total)
-- GitHub Actions workflow split into test and build jobs with dependency
+- Made `winsound` import conditional for cross-platform compatibility
+- Simplified GitHub Actions workflow (removed test gates for faster builds)
 
 ### Technical Details
 - `click_maple_windows()`: Added `pyautogui.moveTo(x, y, duration=...)` before click
 - Random movement duration generated using `random.uniform(0.3, 0.8)`
 - Small pause after movement using `random.uniform(0.05, 0.15)`
-- Tests updated to mock `pyautogui.moveTo` and verify animation parameters
-- Added test for mouse movement duration range validation
-- Created `validate_tests.py` script for easy local test execution
-- Added `.pre-commit-config.yaml` for automated pre-commit testing
 
 ## [1.0.0] - 2026-01-03
 

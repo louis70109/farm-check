@@ -8,7 +8,7 @@
 
 ## Overview
 
-The Timer Application uses GitHub Actions for automated testing and building. The pipeline ensures that all tests pass before creating release builds.
+The Timer Application uses GitHub Actions for automated building and releasing. When you push a version tag, GitHub automatically builds a Windows executable and creates a release.
 
 ---
 
@@ -22,16 +22,7 @@ The Timer Application uses GitHub Actions for automated testing and building. Th
          │
          ▼
 ┌─────────────────┐
-│  Test Job       │◄─── Runs on Windows
-│  - Install deps │
-│  - Run pytest   │
-│  - Generate cov │
-└────────┬────────┘
-         │
-         │ ✅ Tests Pass
-         ▼
-┌─────────────────┐
-│  Build Job      │◄─── Only if tests pass
+│  Build Job      │◄─── Runs on Windows
 │  - Install deps │
 │  - PyInstaller  │
 │  - Create EXE   │
@@ -41,57 +32,29 @@ The Timer Application uses GitHub Actions for automated testing and building. Th
 ┌─────────────────┐
 │  Release        │
 │  - Upload EXE   │
-│  - Create tag   │
+│  - Auto Release │
 └─────────────────┘
 ```
 
 ---
 
-## Jobs
+## Build Job
 
-### Job 1: Test
-
-**Purpose**: Validate code quality and functionality  
+**Purpose**: Package application as Windows executable  
 **Runs on**: `windows-latest`  
 **Trigger**: Tag push (`v*`)
 
 **Steps**:
 1. Checkout code
 2. Setup Python 3.11
-3. Install dependencies (including pytest, pytest-cov)
-4. Run test suite with coverage
-5. Upload coverage report to Codecov (optional)
-
-**Success Criteria**:
-- All 52 tests must pass
-- No test failures or errors
-- Coverage report generated
-
-**Failure Handling**:
-- If tests fail, build job is skipped
-- Workflow fails with error status
-- No release is created
-
----
-
-### Job 2: Build
-
-**Purpose**: Package application as Windows executable  
-**Runs on**: `windows-latest`  
-**Dependencies**: Requires `test` job to pass  
-**Trigger**: After test job succeeds
-
-**Steps**:
-1. Checkout code
-2. Setup Python 3.11
-3. Install dependencies
-4. Build with PyInstaller (`--onefile --console`)
+3. Install dependencies from requirements.txt
+4. Build with PyInstaller (`--onefile --console timer.py`)
 5. Upload artifact (`timer.exe`)
-6. Create GitHub Release (if tag push)
+6. Create GitHub Release with executable
 
 **Output**:
 - `dist/timer.exe` - Standalone Windows executable
-- GitHub Release with executable attached
+- GitHub Release with executable automatically attached
 
 ---
 
@@ -101,25 +64,9 @@ The Timer Application uses GitHub Actions for automated testing and building. Th
 
 Main workflow configuration:
 - **Triggers**: Tag push (`v*`), manual workflow dispatch
-- **Jobs**: test, build
+- **Job**: build
 - **Permissions**: `contents: write` for releases
 - **Environment**: Windows-latest, Python 3.11
-
-### `pytest.ini`
-
-Test configuration:
-- Test discovery patterns
-- Coverage settings (>80% target)
-- Output formatting
-- Branch coverage enabled
-
-### `.pre-commit-config.yaml`
-
-Optional pre-commit hooks:
-- Code formatting (black)
-- Import sorting (isort)
-- Linting (flake8)
-- Test execution before commit
 
 ---
 
@@ -128,17 +75,14 @@ Optional pre-commit hooks:
 ### Triggering a Build
 
 ```bash
-# 1. Ensure all tests pass locally
-python validate_tests.py
-
-# 2. Commit your changes
+# 1. Commit your changes
 git add .
 git commit -m "Add new feature"
 
-# 3. Create version tag
+# 2. Create version tag
 git tag v1.0.1
 
-# 4. Push tag to trigger pipeline
+# 3. Push tag to trigger pipeline
 git push origin v1.0.1
 ```
 
@@ -159,72 +103,9 @@ Via GitHub UI:
 
 ---
 
-## Test Requirements
-
-### Mandatory Test Pass
-
-**All tests must pass for build to proceed**
-
-Current test suite:
-- **tests/test_config.py**: 20 tests
-- **tests/test_timer.py**: 17 tests
-- **tests/test_automation.py**: 15 tests
-- **Total**: 52 tests
-
-### Coverage Requirements
-
-- **Target**: >80% code coverage
-- **Current**: ~82% coverage
-- **Reporting**: HTML report generated in `htmlcov/`
-
----
-
-## Local Development
-
-### Running Tests Locally
-
-```bash
-# Quick validation
-python validate_tests.py
-
-# Detailed pytest
-pytest tests/ -v --cov=timer --cov-report=html
-
-# View coverage
-open htmlcov/index.html  # macOS
-start htmlcov/index.html # Windows
-```
-
-### Setting Up Pre-commit Hooks
-
-```bash
-# Install pre-commit
-pip install pre-commit
-
-# Install hooks
-pre-commit install
-
-# Run manually
-pre-commit run --all-files
-```
-
----
-
 ## Troubleshooting
 
-### Tests Fail in CI but Pass Locally
-
-**Possible causes**:
-- Environment differences (Python version, OS)
-- Missing dependencies in requirements.txt
-- Hardcoded paths or assumptions
-
-**Solution**:
-- Check workflow logs for specific error
-- Ensure all dependencies listed in requirements.txt
-- Use platform-independent code
-
-### Build Fails After Tests Pass
+### Build Fails
 
 **Possible causes**:
 - PyInstaller configuration issue
@@ -254,7 +135,7 @@ pre-commit run --all-files
 
 ### Before Pushing Tag
 
-✅ Run tests locally: `python validate_tests.py`  
+✅ Test the application manually on Windows  
 ✅ Review changes: `git diff`  
 ✅ Update CHANGELOG.md  
 ✅ Verify version number in tag  
@@ -281,17 +162,9 @@ Include in GitHub Release:
 
 ### Pipeline Performance
 
-- **Average test duration**: ~30-60 seconds
 - **Average build duration**: ~2-3 minutes
-- **Total pipeline time**: ~4-5 minutes
+- **Total pipeline time**: ~2-3 minutes
 - **Success rate**: Target >95%
-
-### Test Statistics
-
-- **Total tests**: 52
-- **Code coverage**: ~82%
-- **Test files**: 3
-- **Lines of test code**: ~1,200+
 
 ---
 
@@ -299,11 +172,7 @@ Include in GitHub Release:
 
 ### Planned Improvements
 
-- [ ] Add integration tests for real window interactions
-- [ ] Performance benchmarks
-- [ ] Cross-platform testing (macOS, Linux)
 - [ ] Automated release notes generation
-- [ ] Code quality gates (complexity, duplication)
 - [ ] Security scanning
 - [ ] Dependency vulnerability checks
 
@@ -311,9 +180,7 @@ Include in GitHub Release:
 
 - [ ] Matrix testing (multiple Python versions)
 - [ ] Caching dependencies for faster builds
-- [ ] Parallel test execution
 - [ ] Nightly builds for main branch
-- [ ] Pull request testing
 - [ ] Automated version bumping
 
 ---
@@ -323,19 +190,16 @@ Include in GitHub Release:
 ### Resources
 
 - **Workflow logs**: GitHub Actions tab
-- **Test results**: Actions → Workflow run → Test job
-- **Coverage reports**: Codecov (if configured)
-- **Artifacts**: Actions → Workflow run → Artifacts section
+- **Build artifacts**: Actions → Workflow run → Artifacts section
+- **Releases**: Repository → Releases section
 
 ### Getting Help
 
 - Check workflow logs for detailed error messages
-- Review test output for failure details
 - Consult GitHub Actions documentation
-- Check pytest documentation for test issues
+- Check PyInstaller documentation for build issues
 
 ---
 
 **Last Updated**: 2026-01-03  
-**Pipeline Status**: ✅ Operational  
-**Test Success Rate**: 100%
+**Pipeline Status**: ✅ Operational

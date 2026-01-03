@@ -408,20 +408,6 @@ pyinstaller --onefile --console timer.py
 
 ---
 
-### Testing Strategy
-
-**Current Status**: No automated tests  
-**Challenge**: Global state and threading complicate testing
-
-**Research for Future**:
-- Mock `keyboard` library for hotkey tests
-- Freeze time for timer tests (`freezegun`)
-- Refactor to dependency injection for testability
-
-**Priority**: Low (application is stable and scope is limited)
-
----
-
 ## 6. Best Practices Applied
 
 ### Error Handling
