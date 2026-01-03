@@ -31,13 +31,13 @@ Successfully implemented comprehensive automated testing infrastructure for the 
 - **TestPlaySound** (1 test): System sound playback
 - **TestHotkeyManagement** (3 tests): Hotkey registration, unregistration, error handling
 
-#### tests/test_automation.py (14 test cases)
+#### tests/test_automation.py (15 test cases)
 - **TestWindowAvailability** (1 test): Optional dependency detection
-- **TestClickMapleWindows** (7 tests): Window clicking, selection filtering, error handling
-- **TestWindowRandomization** (3 tests): Click position, delay, window order randomization
-- **TestWindowActivation** (3 tests): Window activation methods and fallback
+- **TestClickMapleWindows** (8 tests): Window clicking, selection filtering, error handling, mouse animation
+- **TestWindowRandomization** (4 tests): Click position, delay, window order, movement duration randomization
+- **TestWindowActivation** (2 tests): Window activation methods and fallback
 
-**Total: 51 test cases across 3 test files**
+**Total: 52 test cases across 3 test files** (updated with mouse animation tests)
 
 ---
 

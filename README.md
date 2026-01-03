@@ -76,6 +76,15 @@
 
 ## 使用 GitHub Actions 自動打包
 
+### CI/CD 流程
+
+專案已配置 GitHub Actions 進行自動化測試和建構：
+
+1. **自動測試**：每次推送 tag 時，會先執行完整測試套件
+2. **測試必須通過**：只有當所有測試通過後，才會進行建構
+3. **自動建構**：測試通過後，自動打包 Windows 執行檔
+4. **自動發布**：建構完成後，自動創建 GitHub Release
+
 ### 步驟
 
 1. **將專案推到 GitHub**
@@ -90,19 +99,63 @@
 
 2. **建立 GitHub Actions 設定檔**
 
-   已經包含在專案中的 `.github/workflows/build.yml` 會在你推送 tag 時自動打包。
+   已經包含在專案中的 `.github/workflows/build.yml` 會在你推送 tag 時自動執行：
+   - **Test Job**: 運行所有測試（51個測試案例）
+   - **Build Job**: 測試通過後才執行建構
 
 3. **觸發自動打包**
    ```bash
-   git tag v1.0.0
-   git push origin v1.0.0
+   # 確保本地測試通過
+   python validate_tests.py
+   
+   # 創建版本標籤
+   git tag v1.0.1
+   git push origin v1.0.1
    ```
 
-4. **下載執行檔**
+4. **查看建構進度**
+   - 到 GitHub 專案頁面
+   - 點選 "Actions" 標籤
+   - 查看測試和建構狀態
+
+5. **下載執行檔**
 
    - 到 GitHub 專案頁面
    - 點選右側的 "Releases"
    - 下載 `timer.exe`
+
+### 本地測試
+
+在推送到 GitHub 前，建議先在本地運行測試：
+
+```bash
+# 安裝測試依賴
+pip install pytest pytest-cov
+
+# 運行測試
+python validate_tests.py
+
+# 或使用 pytest 直接運行
+pytest tests/ -v --cov=timer --cov-report=html
+
+# 查看覆蓋率報告
+open htmlcov/index.html  # macOS
+start htmlcov/index.html # Windows
+```
+
+### Pre-commit Hook（可選）
+
+安裝 pre-commit hook 以在提交前自動運行測試：
+
+```bash
+# 安裝 pre-commit
+pip install pre-commit
+
+# 設置 hook
+pre-commit install
+
+# 現在每次 git commit 都會自動運行測試
+```
 
 ## 重新設定
 

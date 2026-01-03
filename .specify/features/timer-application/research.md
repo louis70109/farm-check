@@ -227,12 +227,20 @@ else:
 
 ### Auto-Click Sequence Design
 
-**Decision**: Randomized, human-like click pattern  
+**Decision**: Randomized, human-like click pattern with animated mouse movement  
 **Rationale**:
 - Shuffle window order (unpredictable sequence)
+- **Animated mouse movement** (0.3-0.8 seconds glide to each window)
 - Random click positions (±30% offset from center)
+- Natural reaction time pause after movement (0.05-0.15 seconds)
 - Variable inter-click delays (0.5-2.5 seconds)
-- Total sequence ~5 seconds (mimics human speed)
+- Total sequence ~5-8 seconds (mimics human speed)
+
+**Human-like Mouse Behavior**:
+- Use `pyautogui.moveTo(x, y, duration=...)` for smooth animation
+- Random movement duration (0.3-0.8 seconds) to simulate different mouse speeds
+- Pause after reaching target (human reaction time before clicking)
+- Avoids instant teleportation that looks robotic
 
 **Safety Measures**:
 - Validate window handles before interaction
@@ -240,7 +248,7 @@ else:
 - Filter by user selection (if configured)
 
 **Fallback Strategy**:
-1. Try `pyautogui.click()` to activate window (most human-like)
+1. Try `pyautogui.moveTo()` then `click()` to activate window (most human-like)
 2. Fall back to `window.activate()` (API call)
 3. Press trigger key regardless of activation success
 

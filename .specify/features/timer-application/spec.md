@@ -100,13 +100,17 @@ The application is primarily used for timing periodic tasks in the MapleRoyals g
 2. Filter by user's window selection (if specified)
 3. Shuffle window order for randomness
 4. For each window:
+   - Move mouse to target position with animation (0.3-0.8 seconds duration)
+   - Add small pause after movement (0.05-0.15 seconds for human reaction time)
    - Calculate random click position (±30% offset from center)
    - Click to activate window
    - Press the configured trigger key
    - Wait random delay (0.5-2.5 seconds) before next window
 
-**FR-6.4**: Total auto-click sequence should take approximately 5 seconds  
-**FR-6.5**: Display progress/status messages during auto-click sequence
+**FR-6.4**: Mouse movement must use animation (not instant teleport) for human-like behavior  
+**FR-6.5**: Mouse movement duration must be randomized (0.3-0.8 seconds per window)  
+**FR-6.6**: Total auto-click sequence should take approximately 5-8 seconds  
+**FR-6.7**: Display progress/status messages during auto-click sequence
 
 ### FR-7: Runtime Command Interface
 

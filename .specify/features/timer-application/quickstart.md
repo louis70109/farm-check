@@ -79,6 +79,12 @@ When you run the application for the first time:
    
    Type '/all' for all, or enter numbers (e.g., '1,2'): /all
    ```
+   
+   **Human-like Mouse Movement**: 
+   - Mouse smoothly glides to each window (0.3-0.8 seconds)
+   - Random click positions within window (±30% from center)
+   - Natural pauses between actions (0.05-0.15 seconds)
+   - This simulates real human mouse behavior for anti-detection
 
 6. Configuration saved automatically!
 
@@ -105,6 +111,9 @@ Press your configured **Stop** key anytime to cancel.
 **Automatic Sequence**:
 1. System beep plays
 2. MapleRoyals windows clicked (if enabled)
+   - Mouse smoothly moves to each window with animation
+   - Randomized click positions and timing
+   - Looks like natural human mouse movement
 3. Auto-restart countdown (5 seconds)
 
 **Quick Menu** (Press ESC during countdown):

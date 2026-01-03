@@ -51,12 +51,13 @@ class TestClickMapleWindows:
     @patch('timer.WINDOW_AUTOMATION_AVAILABLE', True)
     @patch('timer.gw.getAllWindows')
     @patch('timer.keyboard.press_and_release')
+    @patch('timer.pyautogui.moveTo')
     @patch('timer.pyautogui.click')
     @patch('timer.time.sleep')
     @patch('timer.random.shuffle')
     @patch('timer.random.uniform')
     def test_click_windows_all_windows(self, mock_uniform, mock_shuffle, mock_sleep,
-                                       mock_click, mock_keyboard, mock_get_windows, capsys):
+                                       mock_click, mock_moveto, mock_keyboard, mock_get_windows, capsys):
         """Test clicking all MapleRoyals windows"""
         # Setup mock windows
         mock_win1 = MagicMock()
@@ -85,12 +86,13 @@ class TestClickMapleWindows:
             'selected_window_titles': None
         }
         
-        mock_uniform.return_value = 0.1  # Small offset for click position
+        mock_uniform.return_value = 0.1  # Small offset for click position and movement duration
         
         timer.click_maple_windows()
         
-        # Verify clicks happened
-        assert mock_click.call_count == 2
+        # Verify mouse movements and clicks happened
+        assert mock_moveto.call_count == 2  # Mouse moved to each window
+        assert mock_click.call_count == 2  # Clicked each window
         assert mock_keyboard.call_count == 2
         
         captured = capsys.readouterr()
@@ -100,11 +102,12 @@ class TestClickMapleWindows:
     @patch('timer.WINDOW_AUTOMATION_AVAILABLE', True)
     @patch('timer.gw.getAllWindows')
     @patch('timer.keyboard.press_and_release')
+    @patch('timer.pyautogui.moveTo')
     @patch('timer.pyautogui.click')
     @patch('timer.random.shuffle')
     @patch('timer.random.uniform')
     def test_click_windows_selected_titles(self, mock_uniform, mock_shuffle,
-                                           mock_click, mock_keyboard, mock_get_windows):
+                                           mock_click, mock_moveto, mock_keyboard, mock_get_windows):
         """Test clicking only selected windows"""
         mock_win1 = MagicMock()
         mock_win1.title = "MapleRoyals - Character1"
@@ -146,7 +149,8 @@ class TestClickMapleWindows:
         timer.click_maple_windows()
         
         # Verify only 2 windows clicked (1 and 3, not 2)
-        assert mock_click.call_count == 2
+        assert mock_moveto.call_count == 2  # Mouse moved to 2 windows
+        assert mock_click.call_count == 2  # Clicked 2 windows
         assert mock_keyboard.call_count == 2
     
     @patch('timer.WINDOW_AUTOMATION_AVAILABLE', True)
@@ -175,10 +179,11 @@ class TestClickMapleWindows:
     @patch('timer.WINDOW_AUTOMATION_AVAILABLE', True)
     @patch('timer.gw.getAllWindows')
     @patch('timer.keyboard.press_and_release')
+    @patch('timer.pyautogui.moveTo')
     @patch('timer.pyautogui.click')
     @patch('timer.random.uniform')
     def test_click_windows_handles_window_error(self, mock_uniform, mock_click,
-                                                 mock_keyboard, mock_get_windows, capsys):
+                                                 mock_moveto, mock_keyboard, mock_get_windows, capsys):
         """Test error handling when window becomes invalid during click"""
         mock_win1 = MagicMock()
         mock_win1.title = "MapleRoyals - Character1"
@@ -240,11 +245,70 @@ class TestClickMapleWindows:
                 valid_windows.append(w)
         
         assert len(valid_windows) == 1
+    
+    @patch('timer.WINDOW_AUTOMATION_AVAILABLE', True)
+    @patch('timer.gw.getAllWindows')
+    @patch('timer.keyboard.press_and_release')
+    @patch('timer.pyautogui.moveTo')
+    @patch('timer.pyautogui.click')
+    @patch('timer.time.sleep')
+    @patch('timer.random.uniform')
+    def test_mouse_movement_animation(self, mock_uniform, mock_sleep, mock_click,
+                                     mock_moveto, mock_keyboard, mock_get_windows):
+        """Test that mouse moves to target with animation duration"""
+        mock_win = MagicMock()
+        mock_win.title = "MapleRoyals - Test"
+        mock_win._hWnd = 1
+        mock_win.left = 100
+        mock_win.top = 200
+        mock_win.width = 800
+        mock_win.height = 600
+        mock_win.size = (800, 600)
+        
+        mock_get_windows.return_value = [mock_win]
+        
+        timer.config = {
+            'trigger_key': 'f1',
+            'selected_window_titles': None
+        }
+        
+        # Mock uniform to return predictable values
+        mock_uniform.side_effect = [
+            0.1,    # offset_x calculation
+            0.1,    # offset_y calculation
+            0.5,    # move_duration
+            0.1,    # reaction time pause
+            1.0     # delay between windows (though only 1 window)
+        ]
+        
+        timer.click_maple_windows()
+        
+        # Verify moveTo was called with duration parameter
+        assert mock_moveto.call_count == 1
+        call_args = mock_moveto.call_args
+        
+        # moveTo should be called with (x, y, duration=...)
+        assert len(call_args[0]) == 2  # x, y positional args
+        assert 'duration' in call_args[1]  # duration keyword arg
+        
+        # Verify duration is within expected range (0.3-0.8 seconds)
+        duration = call_args[1]['duration']
+        assert 0.3 <= duration <= 0.8, f"Duration {duration} is outside expected range [0.3, 0.8]"
+        
+        # Verify click was called after movement
+        assert mock_click.call_count == 1
 
 
 class TestWindowRandomization:
     """Test randomization features for human-like behavior"""
     
+    def test_mouse_movement_duration_range(self):
+        """Test that mouse movement duration is within human-like range"""
+        # Test multiple iterations to ensure randomness stays in bounds
+        for _ in range(100):
+            duration = random.uniform(0.3, 0.8)
+            assert 0.3 <= duration <= 0.8
+            assert isinstance(duration, float)
     def test_click_position_randomization(self):
         """Test random click position calculation"""
         window_width = 800

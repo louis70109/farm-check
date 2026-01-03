@@ -345,8 +345,16 @@ def click_maple_windows():
                     click_x = window_left + window_width // 2 + offset_x
                     click_y = window_top + window_height // 2 + offset_y
 
-                    # Click on random position within window to activate it
-                    pyautogui.click(click_x, click_y)
+                    # Move mouse to target position with human-like animation
+                    # Random duration between 0.3 to 0.8 seconds for more natural movement
+                    move_duration = random.uniform(0.3, 0.8)
+                    pyautogui.moveTo(click_x, click_y, duration=move_duration)
+                    
+                    # Small pause after movement (human reaction time)
+                    time.sleep(random.uniform(0.05, 0.15))
+                    
+                    # Click on the position (mouse is already there)
+                    pyautogui.click()
                     time.sleep(0.2)  # Wait for window to become active
 
                 except Exception:
