@@ -98,7 +98,7 @@ LANGUAGES = {
         'type_setup': "Type '/setup' to reconfigure",
 
         # Timer messages
-        'timer_started': '[RESET] Timer started: {}s (base: {}s, offset: {:+d}s)',
+        'timer_started': '[RESET] Timer started: {:.2f}s (base: {:.2f}s, offset: {:+.2f}s)',
         'timer_started_simple': '[RESET] Timer started: {} seconds...',
         'timer_cancelled': '[STOP] Timer cancelled.',
         'times_up': "Time's up! Playing sound...",
@@ -206,7 +206,7 @@ LANGUAGES = {
         # Anti-Detection
         'log_anti_detect_pause': '🛡️ Simulating human thought... ({:.1f}s)',
         'log_long_break': '🛌 Forced human break for physical recovery ({:.1f} mins)',
-        'log_dynamic_shift': '🔄 Pattern shifting: {:+d}s',
+        'log_dynamic_shift': '🔄 Pattern shifting: {:+.2f}s',
 
         # System Tray
         'tray_show': 'Show Console',
@@ -326,7 +326,7 @@ LANGUAGES = {
         'type_setup': "輸入 '/setup' 重新設定",
 
         # Timer messages
-        'timer_started': '[重置] 計時器已啟動：{}秒（基礎：{}秒，偏移：{:+d}秒）',
+        'timer_started': '[重置] 計時器已啟動：{:.2f}秒（基礎：{:.2f}秒，偏移：{:+.2f}秒）',
         'timer_started_simple': '[重置] 計時器已啟動：{} 秒...',
         'timer_cancelled': '[停止] 計時器已取消。',
         'times_up': '時間到！播放音效...',
@@ -434,7 +434,7 @@ LANGUAGES = {
         # Anti-Detection
         'log_anti_detect_pause': '🛡️ 模擬人類思考中... ({:.1f}秒)',
         'log_long_break': '🛌 人類體力不支，正在進行中途休息 ({:.1f}分鐘)',
-        'log_dynamic_shift': '🔄 偵測到節奏模式，實施動態相位偏移: {:+d}秒',
+        'log_dynamic_shift': '🔄 偵測到節奏模式，實施動態相位偏移: {:+.2f}秒',
 
         # System Tray
         'tray_show': '顯示控制台',
