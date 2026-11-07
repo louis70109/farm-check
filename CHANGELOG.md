@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Desktop app (GPUI)** in `desktop/`: a native Rust GUI port of the countdown timer
+  - Countdown, random ±offset, dynamic base shift, progress bar and time-up beep
+  - Adjustable countdown and offset, in-window START/RESET and STOP hotkeys
+  - Traditional Chinese / English UI, switchable at runtime
+  - Shares `timer_config.json` with the Python version
 - **Human-like mouse movement animation** for auto-click feature
   - Mouse now smoothly glides to each window instead of instant teleportation
   - Random movement duration (0.3-0.8 seconds) simulates natural mouse speed
