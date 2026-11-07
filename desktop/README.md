@@ -1,4 +1,4 @@
-# 計時器桌面版（GPUI）
+# ringer 桌面版（GPUI）
 
 以 [GPUI](https://crates.io/crates/gpui)（Zed 編輯器使用的 Rust GUI 框架）重新實作的桌面版計時器，對應 Python 版 `timer.py` 的計時核心功能。
 
@@ -44,7 +44,7 @@
 cd desktop
 cargo run --release     # 直接執行
 cargo test              # 單元測試（計時邏輯、設定檔、翻譯）
-cargo build --release   # 產出 target/release/farm-check-desktop(.exe)
+cargo build --release   # 產出 target/release/ringer(.exe)
 ```
 
 ### Linux 需要的系統套件

@@ -76,7 +76,7 @@ def create_tray_icon(on_exit_callback, restart_callback, stop_callback):
         item(t('tray_exit'), lambda icon, item: on_exit_callback())
     )
 
-    icon = pystray.Icon("farm_check", image, "MapleRoyals Timer", menu)
+    icon = pystray.Icon("ringer", image, "ringer", menu)
     return icon
 
 def tray_thread_func(icon):

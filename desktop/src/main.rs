@@ -503,7 +503,7 @@ fn main() {
             WindowOptions {
                 window_bounds: Some(WindowBounds::Windowed(bounds)),
                 titlebar: Some(TitlebarOptions {
-                    title: Some("Farm Check Timer".into()),
+                    title: Some("ringer".into()),
                     ..Default::default()
                 }),
                 ..Default::default()

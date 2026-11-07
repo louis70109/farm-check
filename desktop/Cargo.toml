@@ -1,5 +1,5 @@
 [package]
-name = "farm-check-desktop"
+name = "ringer"
 version = "0.1.0"
 edition = "2021"
 description = "Desktop countdown timer (GPUI) — Rust port of the Python timer"

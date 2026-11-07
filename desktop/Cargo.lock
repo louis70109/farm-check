@@ -1592,16 +1592,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "farm-check-desktop"
-version = "0.1.0"
-dependencies = [
- "gpui",
- "rand 0.8.8",
- "serde",
- "serde_json",
-]
-
-[[package]]
 name = "fastrand"
 version = "1.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4373,6 +4363,16 @@ dependencies = [
  "libc",
  "untrusted",
  "windows-sys 0.52.0",
+]
+
+[[package]]
+name = "ringer"
+version = "0.1.0"
+dependencies = [
+ "gpui",
+ "rand 0.8.8",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
